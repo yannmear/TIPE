@@ -1,0 +1,72 @@
+
+### INTRODUCTION
+
+## ACCROCHE
+
+Je me propose de vous exposer l'aboutissement du projet que j'ai entrepris au cours de cette année à l'occasion du Travail d'initative personnelle encadrée sur le thème de la ville.
+
+Dans les grandes cités modernes, il y a une concentration croissante de flux qu'ils soient, par exemple, routier ou de population. La gestion de ces flux présuppose la mise en place d'un dispositif de capteurs physiques, j'ai ici - en l'occurrence - considéré la simple idée de caméra. Dès lors qu'on s'intéresse à l'implantation d'un tel ensemble de caméras en système, viennent se poser plusieurs questions relatives à l'efficacité du dispositif du  d'une part, ou encore à son coût (le nombre d'élements dans le dispositif) de l'autre. La prise en compte de ces deux paramètres amène à se demander : comment recouvrir la plus grande surface possible et surtout à capter le maximum de données en un minimum de caméras, opérant la jonction entre coût et efficacité.
+
+
+ *L'efficacité peut être comprise à la fois spatialement, de manière à recouvrir le plus de surface possible et surtout à capter les plus larges flux en un minimum de caméras (les notions d'efficacité et de coût se recoupent).*
+
+## PROBLÉMATIQUE
+
+Aussi vous présenterai-je la manière d'optimiser un système de vidéosurveillance en ville, en apportant un exemple pratique d'application.
+
+## CADRE
+
+Donnons-nous tout d'abord un cadre : quelle structure de données convient pour dépeindre le plus fidèlement une ville ? J'ai choisi la structure d'un graphe planaire - c'est-à-dire qu'on peut représenter de sorte à ce qu'aucune de ses arêtes ne s'intersecte avec une autre - non orienté. Les arêtes représentent les voies de circulation, et les sommets leurs intersections.
+
+Les 'caméras' qu'on emploie seront supposées dotées d'une vision à 360°, de sorte à couvrir toutes les voies adjacentes à sa position. Ensuite, pour des raisons pratiques de compréhension, j'opère la distinction suivante entre un recouvrement et une couverture. Le premier terme renvoie à l'ensemble des sommets du graphe où seront placées lesdites caméras, alors que le second correspond à l'ensemble des sommets et arêtes adjacentes aux sommets dudit recouvrement qu'on considéra comme étant "couverts".
+
+## ANNONCE DE PLAN
+
+Dans un premier temps, j'évoquerai la méthode naïve que j'ai considérée, avant de vous présenter la méthode que j'ai retenue qui calque le processus de l'évolution biologique. Dans un deuxième temps, j'aborderai la mise en place pratique de cette méthode pour le cas de la ville de Paris, en tentant de prendre en compte ses flux.
+
+
+### PARTIE 1 : LA MÉTHODE NAÏVE
+
+
+Avant de parler de méthode et d'algorithmie même, il faut essayer de cerner la nature - graphique - d'une ville. Quel type de graphe semble "réaliste" : le cas le plus simple serait de considérer des villes comme New York, par exemple le quartier de Manhattan puisque l'aire close par un ensemble de voies s'intersectant est généralement celle de parallélogrammes. Les centres plus anciens sont cependant quelque peu plus désordonnés. Par conséquent, pour engendrer une ville aléatoire, on engendre un graphe aléatoire pour lequel on réalise une triangulation - qui crée un pavage en triangles -	afin d'obtenir un graphe planaire, auquel on soustrait une certaine proportion d'arêtes pour lui donner un aspect plus irrégulier.
+
+
+Vous pouvez voir ici à gauche ce à quoi cela mène, et à droite justement un recouvrement aléatoire et sa couverture associée (200 sommets au total - recouvrement de 30 sommets).
+
+
+Les données dont j'ai disposé par la suite m'ont conduit à estimer entre 10 000 et 15 000 le nombe d'intersections d'une ville ( la ville de Paris que j'ai modélisée contient 4257 voies pour 8607 intersections)
+. C'est donc sur un graphe de cette envergure qu'il faut réaliser les tests.
+
+Voici les résultats obtenus pour trois recouvrements de tailles différentes en fonction du nombre d'itérations. On converge apparamment a priori très rapidement vers un pourcentage seuil. Il se pourrait également qu'on converge très lentement vers une limite en réalité beaucoup plus grande sur un nombre immense d'essais : mais ici se pose un problème majeur, la puissance de calcul qui a été la mienne, et qui pourrait être celle quelque peu plus grande pour des expérimentations plus intensives, même en optimisant tant que faire se peut mes algorithmes, est fortement limitée. Il m'est arrivé à de multiples reprises d'avoir la mémoire vive de mon ordinateur complètement saturée et de bogguer. Il faut donc espérer être davantage habile qu'un procédé aussi lourd pour essayer d'obtenir de meilleures solutions et approches.
+
+À l'aune de la multitude de recouvrements aléatoires que j'ai observés, j'ai pu observer à de multiples reprises des paires ou des triplets de sommets du recouvrement qui étaient adjacent, réduisant immédiatement l'efficacité de la couverture correspondante. J'ai donc pris soin de rajouter, ce que j'ai appelé une condition de non-adjacence au sein du programme produisant des recouvrements aléatoires. Elle consiste à vérifier préalablement avant la complétion du recouvrement par un nouveau sommet, que le sommet aléatoirement sélectionné ne soit pas déjà couvert par le recouvrement partiel.
+
+Et le résultat de cette condition est assez significatif.
+
+
+Pour deux graphes différents de 15 000 sommets, on atteint des taux de couverture sensiblement proches. Avec la condition d'adjacence sur 1000 essais pour un recouvrement à 10% des sommets, on obtient une couverture qui capte 10% de plus qu'avec la méthode naïve proprement dite.
+
+
+
+### PARTIE 2 : 
+
+Malgré cette condition de non-adjacence des sommets du recouvrement, l'approche reste globalement limitée. En effet, il n'y a pas quelque part égalité en tout endroit d'une ville quant aux flux qui la traversent. Certains quartiers sont largement plus fréquentés que d'autres qui seraient simplement résidentiels par exemple. Aussi faut-il nécessairement pondérer, d'une manière ou d'une autre le graphe.
+
+Une première idée de pondération a été d'attribuer en fonction du type de voierie, un coefficient. J'ai décidé d'attribuer une note allant de 1 à 5 à chaque type de voie : 1 pour une ruelle, 2 pour une rue, 3 pour une grande rue (je pense à la rue de Vaugirard), 4 pour les avenues et 5 pour les boulevards. C'est assez arbitraire et ne saurait être très précis, mais c'est une première façon de pondérer. La deuxième étant d'associer les rues aux données des capteurs réels enregistrés.
+
+Advient par la suite tout naturellement un algorithme dit évolutionniste, ou génétique. Son principe est simple : on calque son déroulement sur le processus évolutionnaire. Les itérations sont ici des "générations", si la première est purement aléatoire, la seconde est issue de la selection, puis de l'hybridation des meilleurs solutions de la génération précédente, et enfin de la mutation aléatoire de leurs "gènes".
+
+
+
+
+
+Après cette pondération, j'ai pensé à employer l'Algorithme de Kruskal, en inversant pour ce faire la pondération, mais mes efforts ont été vites déçus pour des graphes de plusieurs milliers de sommets. La structure Union-Find m'ayant été un peu déroutante.
+
+
+
+
+
+
+
+
+### PARTIE 3 : 
